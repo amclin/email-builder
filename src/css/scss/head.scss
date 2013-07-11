@@ -1,0 +1,12 @@
+@import "variables";
+@import "_boilerplate_head";
+
+.example-head-css {
+	padding: $pad;
+
+	.example-head-css-nested {
+		padding: $pad-half;
+	}
+}
+
+@import "media_queries";

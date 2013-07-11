@@ -1,0 +1,11 @@
+@import "variables";
+@import "boilerplate_inline";
+
+
+.example {
+	color: $blue;
+
+	.example-nested {
+		color: $red;
+	}
+}

@@ -1,0 +1,33 @@
+/*****************
+ * Styles that should remain in the head from https://github.com/jagwire16/Email-Boilerplate
+ *****************/
+
+
+
+/***********
+Originally based on The MailChimp Reset from Fabio Carneiro, MailChimp User Experience Design
+More info and templates on Github: https://github.com/mailchimp/Email-Blueprints
+http://www.mailchimp.com &amp; http://www.fabio-carneiro.com
+
+INLINE: No.
+***********/
+/* Client-specific Styles */
+#outlook a {padding:0;} /* Force Outlook to provide a "view in browser" menu link. */
+body{width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; margin:0; padding:0;}
+/* Prevent Webkit and Windows Mobile platforms from changing default font sizes, while not breaking desktop design. */
+.ExternalClass {width:100%;} /* Force Hotmail to display emails at full width */
+.ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {line-height: 100%;} /* Force Hotmail to display normal line spacing.  More on that: http://www.emailonacid.com/forum/viewthread/43/ */
+#backgroundTable {margin:0; padding:0; width:100% !important; line-height: 100% !important;}
+/* End reset */
+
+
+/** Outlook 07, 10 Padding issue: These "newer" versions of Outlook add some padding around table cells potentially throwing off your perfectly pixeled table.  The issue can cause added space and also throw off borders completely.  Use this fix in your header or inline to safely fix your table woes.
+
+More info: http://www.ianhoar.com/2008/04/29/outlook-2007-borders-and-1px-padding-on-table-cells/
+http://www.campaignmonitor.com/blog/post/3392/1px-borders-padding-on-table-cells-in-outlook-07/
+
+H/T @edmelly
+
+Bring inline: No.
+**/
+table td {border-collapse: collapse;}

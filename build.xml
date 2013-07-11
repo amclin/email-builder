@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="project-name" default="tools" xmlns:artifact="antlib:org.apache.maven.artifact.ant" >
+	<property name="dir.source" value="${basedir}/src" />
+	<property name="dir.source.test" value="${basedir}/tests" />
+	<property environment="environment"/>
+	<property name="env" value="dev" />
+	<property name="dir.config" value="${basedir}/conf" />
+	<property name="dir.intermediate" value="${basedir}/intermediate" />
+	<property name="dir.target" value="${basedir}/build" />
+	<property name="dir.tools" value="${dir.target}/tools" />
+
+	<property name="dir.css" value="css"/>
+
+	<target name="tools"
+		description="Run tools for developer environment."
+   		depends="prepare"/>
+
+   	<target name="compile"
+   		description="Compile CSS and HTML"
+   		depends="prepare, css_include">
+   		<!-- copy processed files from intermediate folder to final -->
+   		<copy todir="${dir.target}" includeEmptyDirs="false">
+			<fileset dir="${dir.intermediate}/" excludes="**/.sass-cache/**, **/css/**"/>
+		</copy>
+		<delete dir="${dir.intermediate}" />
+   	</target>
+
+	<target name="prepare"
+		depends="clean"
+		description="Prepare for tools output">
+
+		<copy todir="${dir.intermediate}" includeEmptyDirs="true">
+			<fileset dir="${dir.source}/" excludes="${file.default.exclude}, ${file.exclude}"/>
+		</copy>
+		<mkdir dir="${dir.target}"/>
+	</target>
+
+	<target name="clean"
+		description="Cleanup tool and build artifacts">
+		<delete dir="${dir.intermediate}" />
+		<delete dir="${dir.target}" />
+	</target>
+
+
+
+	<!-- Compiles SCSS to CSS using the Compass Ruby Gem -->
+	<target name="compass_compile" description="Compile SCSS to CSS">
+		<condition property="cssEnv" value="development" else="production">
+			<!-- Pass environment property to Compass compiler -->
+			<equals arg1="${env}" arg2="dev" />
+		</condition>
+		<echo message="Compiling SCSS to CSS"/>
+		<exec executable="compass" failonerror="yes" dir="${dir.intermediate}">
+			<arg value="compile"/>
+			<arg value="--boring"/>
+			<arg value="--force"/>
+			<arg value="-e"/>
+			<arg value="${cssEnv}"/>
+			<arg value="-c" />
+			<arg value="${dir.config}/config.rb"/>
+		</exec>
+	</target>
+
+	<!-- Run the Premailer Ruby Gem on HTML files -->
+	<target name="css_inline" description="Convert Head and @include CSS into inline CSS using premailer"
+		depends="compass_compile,css_exclude_head">
+		<echo>Inlining CSS for HTML files in ${dir.intermediate}</echo>
+
+		<apply executable="premailer" failonerror="yes" 
+			dir="${basedir}"
+			dest="${dir.target}">
+			<fileset dir="${dir.intermediate}" includes="*.html"/>
+
+			<redirector>
+				<outputmapper id="out" type="glob" from="*.html" to="${dir.intermediate}/*.html"/>
+			</redirector>
+			<mapper type="glob" from="*.html" to="*.html"/>
+		</apply>
+	</target>
+
+	<!-- Rip the CSS includes out that need to remain in the head -->
+	<target name="css_exclude_head">
+		<echo>Removing the @include that points to the head-safe CSS file</echo>
+		<replaceregexp
+			match='@import\ url\("css/head.css"\);'
+			replace=""
+			flags="gs">
+			<fileset dir="${dir.intermediate}">
+				<include name="*.html" />
+			</fileset>
+		</replaceregexp>
+	</target>
+
+	<!-- Insert the CSS includes that should remain in the head -->
+	<target name="css_restore_head"
+		depends="css_inline">
+		<property name="file.name" value="head.css"/>
+
+		<echo>Copying ${file.name} back into HTML head</echo>
+
+		<!-- load the CSS file contents into a variable -->
+		<loadfile property="file.contents" srcFile="${dir.intermediate}/${dir.css}/${file.name}"/>
+
+		<replaceregexp
+			match='&lt;/head&gt;'
+			replace="&lt;style\ type='text/css'&gt;${file.contents}&lt;/style&gt;&lt;/head&gt;"
+			flags="gs">
+			<fileset dir="${dir.intermediate}">
+				<include name="*.html" />
+			</fileset>
+		</replaceregexp>
+	</target>
+
+	<!-- Fires off the whole shebang -->
+	<target name="css_include"
+		depends="css_restore_head">
+		<delete dir="{dir.intermediate}/.sass-cache/"/>
+		<delete dir="{dir.intermediate}/css"/>
+	</target>
+
+</project>
