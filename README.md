@@ -5,15 +5,22 @@ Basic build system for processing HTML + SCSS into an email-ready file with inli
 
 
 ## Requirements
+* XCode
+* Ruby 1.9.x
+* Compass
+* Hpricot
+* Premailer
 
 ###Install compass
 http://compass-style.org/install/
 
 `gem update --system`
+
 `gem install compass`
 
 
 ### Install Premailer
+`gem install hpricot`
 
 `gem install premailer`
 
@@ -27,6 +34,10 @@ http://compass-style.org/install/
 * Images should go into the assets folder
 
 * From the command line at the root of your project, run "ant compile". The results will be dumped out into the build folder.
+
+##Development vs. Production
+By default, email builder generates dev-appropriate files (CSS has comments for debugging purposes). To output production-ready files with CSS comments removed and compressed, change line 7 of build.xml to this:
+`<property name="env" value="prod" />`
 
 
 ### Inspiration from:
