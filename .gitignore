@@ -6,3 +6,4 @@ css/*.css
 .sass-cache/*
 .settings/*
 build
+conf/.sass-cache
