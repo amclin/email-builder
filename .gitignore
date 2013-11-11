@@ -1,1 +1,8 @@
 .DS_Store
+.sass-cache/*
+intermediate/*
+intermediate2/*
+css/*.css
+.sass-cache/*
+.settings/*
+build
