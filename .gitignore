@@ -7,3 +7,5 @@ css/*.css
 .settings/*
 build
 conf/.sass-cache
+src/css/head.css
+src/css/inline.css
