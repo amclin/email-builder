@@ -1,57 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="project-name" default="tools" xmlns:artifact="antlib:org.apache.maven.artifact.ant" >
+<project name="project-name" default="compile" xmlns:artifact="antlib:org.apache.maven.artifact.ant" >
 	<property name="dir.source" value="${basedir}/src" />
 	<property name="dir.source.test" value="${basedir}/tests" />
 	<property environment="environment"/>
 	<property name="env" value="dev" />
 	<property name="dir.config" value="${basedir}/conf" />
 	<property name="dir.intermediate" value="${basedir}/intermediate" />
+	<property name="dir.intermediate2" value="${basedir}/intermediate2" />
 	<property name="dir.target" value="${basedir}/build" />
-	<property name="dir.tools" value="${dir.target}/tools" />
 
 	<property name="dir.css" value="css"/>
-
-	<target name="tools"
-		description="Run tools for developer environment."
-   		depends="prepare"/>
-
-   	<target name="compile"
-   		description="Compile CSS and HTML"
-   		depends="prepare, css_include">
-   		<!-- copy processed files from intermediate folder to final -->
-   		<copy todir="${dir.target}" includeEmptyDirs="false">
-			<fileset dir="${dir.intermediate}/" excludes="**/.sass-cache/**, **/css/**"/>
-		</copy>
+	
+	<target name="clean"
+		description="Cleanup tool and build artifacts">
+		<echo>Delete temporary directories.</echo>
 		<delete dir="${dir.intermediate}" />
-   	</target>
-
+		<delete dir="${dir.target}" />
+		<delete dir="${dir.config}/.sass-cache/" />
+		<delete dir="${dir.source}/css" includes="*.css" />
+	</target>
+	
 	<target name="prepare"
 		depends="clean"
-		description="Prepare for tools output">
-
+		description="Prepare for compile">
+		<echo>Copy files from ${dir.source} to ${dir.intermediate}</echo>
 		<copy todir="${dir.intermediate}" includeEmptyDirs="true">
 			<fileset dir="${dir.source}/" excludes="${file.default.exclude}, ${file.exclude}"/>
 		</copy>
+		<mkdir dir="${dir.intermediate2}"/>
 		<mkdir dir="${dir.target}"/>
-	</target>
-
-	<target name="clean"
-		description="Cleanup tool and build artifacts">
-		<delete dir="${dir.intermediate}" />
-		<delete dir="${dir.target}" />
-	</target>
-
-
-
-	<!-- Compiles SCSS to CSS using the Compass Ruby Gem -->
-	<target name="compass_compile" description="Compile SCSS to CSS">
+	</target>	
+	
+	<target name="compass_compile"
+		description="Compile SCSS to CSS using Compass Ruby Gem">
 		<condition property="cssEnv" value="development" else="production">
 			<!-- Pass environment property to Compass compiler -->
 			<equals arg1="${env}" arg2="dev" />
 		</condition>
 		<echo message="Compiling SCSS to CSS"/>
-		<exec executable="compass" failonerror="yes" dir="${dir.intermediate}">
+		<exec executable="compass" failonerror="yes" dir="${dir.config}">
 			<arg value="compile"/>
 			<arg value="--boring"/>
 			<arg value="--force"/>
@@ -60,27 +48,29 @@
 			<arg value="-c" />
 			<arg value="${dir.config}/config.rb"/>
 		</exec>
+		<copy todir="${dir.intermediate}/css" includeEmptyDirs="false">
+			<fileset dir="${dir.source}/css" excludes="${file.default.exclude}, ${file.exclude}"/>
+		</copy>
 	</target>
-
-	<!-- Run the Premailer Ruby Gem on HTML files -->
-	<target name="css_inline" description="Convert Head and @include CSS into inline CSS using premailer"
-		depends="compass_compile,css_exclude_head">
-		<echo>Inlining CSS for HTML files in ${dir.intermediate}</echo>
-
+	
+	<target name="css_inline"
+		description="Convert Head and @include CSS into inline CSS using premailer">
+		<echo>Inlining CSS for HTML files in ${src_dir}</echo>
 		<apply executable="premailer" failonerror="yes" 
-			dir="${basedir}"
-			dest="${dir.target}">
-			<fileset dir="${dir.intermediate}" includes="*.html"/>
-
+			dir="${src_dir}"
+			dest="${dest_dir}">
+			<srcfile />
+			<targetfile />
+			<fileset dir="${src_dir}" includes="*.html"/>
 			<redirector>
-				<outputmapper id="out" type="glob" from="*.html" to="${dir.intermediate}/*.html"/>
+				<outputmapper id="out" type="glob" from="*.html" to="${dest_dir}/*.html"/>
 			</redirector>
 			<mapper type="glob" from="*.html" to="*.html"/>
 		</apply>
 	</target>
 
-	<!-- Rip the CSS includes out that need to remain in the head -->
-	<target name="css_exclude_head">
+	<target name="css_exclude_head"
+		description="Rip the CSS includes out that need to remain in the head to prevent them from being inlined.">
 		<echo>Removing the @include that points to the head-safe CSS file</echo>
 		<replaceregexp
 			match='@import\ url\("css/head.css"\);'
@@ -92,31 +82,47 @@
 		</replaceregexp>
 	</target>
 
-	<!-- Insert the CSS includes that should remain in the head -->
-	<target name="css_restore_head"
-		depends="css_inline">
+	<target name="css_insert_head"
+		description="Insert the CSS includes that should remain in the head">
 		<property name="file.name" value="head.css"/>
-
-		<echo>Copying ${file.name} back into HTML head</echo>
-
+		<echo>Copying ${file.name} into HTML head</echo>
 		<!-- load the CSS file contents into a variable -->
 		<loadfile property="file.contents" srcFile="${dir.intermediate}/${dir.css}/${file.name}"/>
-
 		<replaceregexp
 			match='&lt;/head&gt;'
 			replace="&lt;style\ type='text/css'&gt;${file.contents}&lt;/style&gt;&lt;/head&gt;"
 			flags="gs">
-			<fileset dir="${dir.intermediate}">
+			<fileset dir="${dir.intermediate2}">
 				<include name="*.html" />
 			</fileset>
 		</replaceregexp>
 	</target>
 
-	<!-- Fires off the whole shebang -->
 	<target name="css_include"
-		depends="css_restore_head">
-		<delete dir="{dir.intermediate}/.sass-cache/"/>
-		<delete dir="{dir.intermediate}/css"/>
+		depends="compass_compile">
+		<antcall target="css_exclude_head" />
+		<antcall target="css_inline">
+			<param name="src_dir" value="${dir.intermediate}"/>
+			<param name="dest_dir" value="${dir.intermediate2}"/>
+		</antcall>
+		<antcall target="css_insert_head" />
 	</target>
-
+	
+	<!-- Fires off the whole shebang -->
+   	<target name="compile"
+   		depends="prepare"
+   		description="Compile CSS and HTML">
+   		<antcall target="css_include" />
+   		
+   		<!-- copy processed files from intermediate folders to final -->
+   		<copy todir="${dir.target}" includeEmptyDirs="false">
+			<fileset dir="${dir.intermediate2}/" excludes="**/.sass-cache/**, **/css/**"/>
+		</copy>
+   		<!-- copy assets from source to final -->
+		<copy todir="${dir.target}/assets" includeEmptyDirs="true">
+			<fileset dir="${dir.source}/assets" excludes="${file.default.exclude}, ${file.exclude}"/>
+		</copy>
+		<delete dir="${dir.intermediate2}" />
+   		<delete dir="${dir.intermediate}" />
+   	</target>
 </project>
