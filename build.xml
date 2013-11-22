@@ -59,10 +59,9 @@
 		<apply executable="premailer" failonerror="yes" 
 			dir="${src_dir}"
 			dest="${dest_dir}">
-			<srcfile />
-			<targetfile />
 			<fileset dir="${src_dir}" includes="*.html"/>
 			<redirector>
+				<inputmapper type="glob" from="*.html" to="src/*.html"/>
 				<outputmapper id="out" type="glob" from="*.html" to="${dest_dir}/*.html"/>
 			</redirector>
 			<mapper type="glob" from="*.html" to="*.html"/>
