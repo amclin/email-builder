@@ -82,14 +82,14 @@
 	<target name="css_insert_inline"
 		description="Insert the CSS includes that should be inlined">
 		<property name="file.name" value="inline.css"/>
-		<echo>Copying ${file.name} into HTML head</echo>
+		<echo>Copying ${file.name} into HTML head for ${src_dir}</echo>
 		<!-- load the CSS file contents into a variable -->
-		<loadfile property="file.contents" srcFile="${dir.intermediate}/${dir.css}/${file.name}"/>
+		<loadfile property="file.contents" srcFile="${css_dir}/${file.name}"/>
 		<replaceregexp
-			match='@import\ url\("css/inline.css"\);'
+			match="${match}"
 			replace="${file.contents}"
 			flags="gs">
-			<fileset dir="${dir.intermediate}">
+			<fileset dir="${src_dir}">
 				<include name="*.html" />
 			</fileset>
 		</replaceregexp>
@@ -114,7 +114,11 @@
 	<target name="css_include"
 		depends="compass_compile">
 		<antcall target="css_exclude_head" />
-		<antcall target="css_insert_inline" />
+		<antcall target="css_insert_inline">
+			<param name="src_dir" value="${dir.intermediate}"/>
+			<param name="css_dir" value="${dir.intermediate}/${dir.css}"/>
+			<param name="match" value='@import\ url\("css/inline.css"\);'/>
+		</antcall>
 		<antcall target="css_inline">
 			<param name="src_dir" value="${dir.intermediate}"/>
 			<param name="dest_dir" value="${dir.intermediate2}"/>
