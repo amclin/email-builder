@@ -39,8 +39,10 @@ http://compass-style.org/install/
 By default, email builder generates dev-appropriate files (CSS has comments for debugging purposes). To output production-ready files with CSS comments removed and compressed, change line 7 of build.xml to this:
 `<property name="env" value="prod" />`
 
+##Using with other Version Control Systems
+By default this script is configured to do [Gmail cache busting](http://anthonymclin.com/busting-gmail-image-caching-build-scripts) by appending the Git revision to image URLs. To make this work for other version control systems, set the `source.control` property at the top of the file. Default is `git`. Supported values are `git`,`hg`,`svn`.
 
 ### Inspiration from:
 * [HTML5 Boilerplate's build system](https://github.com/h5bp/ant-build-script)
 * [Email Boilerplate](https://github.com/seanpowell/Email-Boilerplate)
-** [Jag White's improvements](https://github.com/jagwire16/Email-Boilerplate)
+* [Jag White's improvements](https://github.com/jagwire16/Email-Boilerplate)
