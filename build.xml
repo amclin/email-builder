@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<project name="project-name" default="compile" xmlns:artifact="antlib:org.apache.maven.artifact.ant" >
+<project default="compile">
 	<property name="dir.source" value="${basedir}/src" />
 	<property name="dir.source.test" value="${basedir}/tests" />
 	<property environment="environment"/>
@@ -8,15 +8,17 @@
 	<property name="dir.config" value="${basedir}/conf" />
 	<property name="dir.intermediate" value="${basedir}/intermediate" />
 	<property name="dir.intermediate2" value="${basedir}/intermediate2" />
-	<property name="dir.target" value="${basedir}/build" />
-
+	<property name="dir.output" value="${basedir}/build" />
 	<property name="dir.css" value="css"/>
+	<!-- set the version control system in use -->
+	<!-- allowed values are hg, git, svn -->
+	<property name="source.control" value="git" />
 	
 	<target name="clean"
 		description="Cleanup tool and build artifacts">
 		<echo>Delete temporary directories.</echo>
 		<delete dir="${dir.intermediate}" />
-		<delete dir="${dir.target}" />
+		<delete dir="${dir.output}" />
 		<delete dir="${dir.config}/.sass-cache/" />
 		<delete dir="${dir.source}/css" includes="*.css" />
 	</target>
@@ -29,7 +31,7 @@
 			<fileset dir="${dir.source}/" excludes="${file.default.exclude}, ${file.exclude}"/>
 		</copy>
 		<mkdir dir="${dir.intermediate2}"/>
-		<mkdir dir="${dir.target}"/>
+		<mkdir dir="${dir.output}"/>
 	</target>	
 	
 	<target name="compass_compile"
@@ -128,19 +130,83 @@
 	
 	<!-- Fires off the whole shebang -->
    	<target name="compile"
-   		depends="prepare"
+   		depends="prepare,build.revision.hg,build.revision.git,build.revision.svn"
    		description="Compile CSS and HTML">
    		<antcall target="css_include" />
+
+   		<!-- Insert cache-busting string to work around Gmail image cacheing -->
+   		<antcall target="bustcache">
+			<param name="src" value="${dir.intermediate2}"/>
+			<param name="cachebust" value="${version.id}"/>
+		</antcall>
    		
    		<!-- copy processed files from intermediate folders to final -->
-   		<copy todir="${dir.target}" includeEmptyDirs="false">
+   		<copy todir="${dir.output}" includeEmptyDirs="false">
 			<fileset dir="${dir.intermediate2}/" excludes="**/.sass-cache/**, **/css/**"/>
 		</copy>
    		<!-- copy assets from source to final -->
-		<copy todir="${dir.target}/assets" includeEmptyDirs="true">
+		<copy todir="${dir.output}/assets" includeEmptyDirs="true">
 			<fileset dir="${dir.source}/assets" excludes="${file.default.exclude}, ${file.exclude}"/>
 		</copy>
  		<delete dir="${dir.intermediate2}" />
    		<delete dir="${dir.intermediate}" />
+   	</target>
+
+	<target name="bustcache"
+   		description="Add cache-busting query string to image paths in html files">
+   		<echo>Appending cache-busting string ${cachebust} to files in ${src}</echo>
+   		<replaceregexp
+   			match="\.(jpg|jpeg|png|gif)"
+   			replace="\.\1\?v${cachebust}"
+   			flags="gis">
+   			<fileset dir="${src}">
+				<include name="*.html" />
+			</fileset>
+		</replaceregexp>
+	</target>
+
+	<target name="test.build.system"
+		description="Choose which source control system is in use.">
+		<echo>Matching source control setting. Set to ${source.control}</echo>
+		<condition property="build.system.git">
+			<matches pattern="git" string="${source.control}" />
+		</condition>
+		<condition property="build.system.hg">
+			<matches pattern="hg" string="${source.control}" />
+		</condition>
+		<condition property="build.system.svn">
+			<matches pattern="svn" string="${source.control}" />
+		</condition>
+	</target>
+
+	<target name="build.revision.hg"
+		description="Find the Mercurial revision number"
+		if="build.system.hg"
+		depends="test.build.system">
+   		<exec executable="/usr/local/bin/hg" outputproperty="version.id">
+   			<arg value="id"/>
+   			<arg value="-i"/>
+   		</exec>
+   		<echo>Current Hg revision is ${version.id}</echo>
+   	</target>
+
+   	<target name="build.revision.git"
+		description="Find the Git revision number"
+		if="build.system.git"
+		depends="test.build.system">
+   		<exec executable="/usr/bin/git" outputproperty="version.id">
+   			<arg value="rev-parse"/>
+   			<arg value="--short"/>
+   			<arg value="head"/>
+   		</exec>
+   		<echo>Current Git revision is ${version.id}</echo>
+   	</target>
+
+   	<target name="build.revision.svn"
+		description="Find the SVN revision number"
+		if="build.system.svn"
+		depends="test.build.system">
+   		<exec executable="/usr/bin/svnversion" outputproperty="version.id" />
+   		<echo>Current SVN revision is ${version.id}</echo>
    	</target>
 </project>
