@@ -36,7 +36,7 @@ http://compass-style.org/install/
 * From the command line at the root of your project, run "ant compile". The results will be dumped out into the build folder.
 
 ##Development vs. Production
-By default, email builder generates dev-appropriate files (CSS has comments for debugging purposes). To output production-ready files with CSS comments removed and compressed, the `evn` property in build.xml from `dev` to "prod":
+By default, email builder generates dev-appropriate files (CSS has comments for debugging purposes). To output production-ready files with CSS comments removed and compressed, the `evn` property in build.xml from `dev` to `prod`:
 `<property name="env" value="prod" />`
 
 ##Using with other Version Control Systems
