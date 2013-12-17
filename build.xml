@@ -38,9 +38,9 @@
 	
 	<target name="compass_compile"
 		description="Compile SCSS to CSS using Compass Ruby Gem">
-		<condition property="cssEnv" value="development" else="production">
+		<condition property="cssEnv" value="production" else="development">
 			<!-- Pass environment property to Compass compiler -->
-			<equals arg1="${env}" arg2="dev" />
+			<equals arg1="${env}" arg2="prod" />
 		</condition>
 		<echo message="Compiling SCSS to CSS"/>
 		<exec executable="compass" failonerror="yes" dir="${dir.config}">
