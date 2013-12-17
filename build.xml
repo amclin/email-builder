@@ -52,8 +52,8 @@
 			<arg value="-c" />
 			<arg value="${dir.config}/config.rb"/>
 		</exec>
-		<copy todir="${dir.intermediate}/css" includeEmptyDirs="false">
-			<fileset dir="${dir.source}/css" excludes="${file.default.exclude}, ${file.exclude}"/>
+		<copy todir="${dir.intermediate}/${dir.css}" includeEmptyDirs="false">
+			<fileset dir="${dir.source}/${dir.css}" excludes="${file.default.exclude}, ${file.exclude}"/>
 		</copy>
 	</target>
 	
