@@ -49,19 +49,18 @@
 			<arg value="-c" />
 			<arg value="${dir.config}/config.rb"/>
 		</exec>
-		<copy todir="${dir.intermediate}/${dir.css}" includeEmptyDirs="false">
-			<fileset dir="${dir.source}/${dir.css}" excludes="${file.default.exclude}, ${file.exclude}"/>
-		</copy>
 	</target>
 	
 	<target name="premailer"
 		description="Convert Head and @include CSS into inline CSS using premailer">
 		<echo>Inlining CSS for HTML files in ${src_dir}</echo>
+		<property name="file.name" value="inline.css"/>
 		<apply executable="${basedir}/premailer-exec.sh" failonerror="yes" 
 			dir="${src_dir}"
 			dest="${dest_dir}">
 			<srcfile />
 			<targetfile />
+			<arg value="${css_dir}/${file.name}" />
 			<fileset dir="${src_dir}" includes="*.html"/>
 			<mapper type="glob" from="*.html" to="*.html"/>
 		</apply>
@@ -73,22 +72,6 @@
 		<replaceregexp
 			match='@import\ url\("css/head.css"\);'
 			replace=""
-			flags="gs">
-			<fileset dir="${edit_dir}">
-				<include name="*.html" />
-			</fileset>
-		</replaceregexp>
-	</target>
-
-	<target name="css_insert_inline"
-		description="Insert the CSS includes that should be inlined">
-		<property name="file.name" value="inline.css"/>
-		<echo>Copying ${file.name} into HTML head for files in ${edit_dir}</echo>
-		<!-- load the CSS file contents into a variable -->
-		<loadfile property="file.contents" srcFile="${css_dir}/${file.name}"/>
-		<replaceregexp
-			match="${match}"
-			replace="${file.contents}"
 			flags="gs">
 			<fileset dir="${edit_dir}">
 				<include name="*.html" />
@@ -117,12 +100,8 @@
 		<antcall target="css_exclude_head">
 			<param name="edit_dir" value="${dir.intermediate}"/>
 		</antcall>
-		<antcall target="css_insert_inline">
-			<param name="edit_dir" value="${dir.intermediate}"/>
-			<param name="css_dir" value="${dir.intermediate}/${dir.css}"/>
-			<param name="match" value='@import\ url\("css/inline.css"\);'/>
-		</antcall>
 		<antcall target="premailer">
+			<param name="css_dir" value="${dir.source}/${dir.css}"/>
 			<param name="src_dir" value="${dir.intermediate}"/>
 			<param name="dest_dir" value="${dir.output}"/>
 		</antcall>
