@@ -37,7 +37,7 @@ http://compass-style.org/install/
 
 ## Configuration Options
 ###Absolute Image URLs
-Your images need to have an absolute URL like `<img src="http://example.com/example.jpg"/>` instead of just a relative URL `<img src="../example.jpg">`. The build script will automatically update all your image tags if you set the property at the top of build.xml:
+Your images need to have an absolute URL like `<img src="http://example.com/example.jpg"/>` instead of just a relative URL `<img src="../example.jpg">`. The build script will automatically update all your image tags if you set the `baseURL` property at the top of build.xml:
 
 `<property name="baseURL" value="http://example.com" />`
 
