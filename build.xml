@@ -13,6 +13,8 @@
 	<!-- set the version control system in use -->
 	<!-- allowed values are "hg", "git", "svn" -->
 	<property name="source.control" value="git" />
+	<!-- set the absolute path used for all relative image assets -->
+	<property name="baseURL" value="http://example.com" />
 	
 	<target name="clean"
 		description="Cleanup tool and build artifacts">
@@ -61,6 +63,7 @@
 			<srcfile />
 			<targetfile />
 			<arg value="${css_dir}/${file.name}" />
+			<arg value="${baseURL}" />
 			<fileset dir="${src_dir}" includes="*.html"/>
 			<mapper type="glob" from="*.html" to="*.html"/>
 		</apply>
