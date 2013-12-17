@@ -9,7 +9,6 @@
 	<property name="env" value="dev" />
 	<property name="dir.config" value="${basedir}/conf" />
 	<property name="dir.intermediate" value="${basedir}/intermediate" />
-	<property name="dir.intermediate2" value="${basedir}/intermediate2" />
 	<property name="dir.output" value="${basedir}/build" />
 	<property name="dir.css" value="css"/>
 	<!-- set the version control system in use -->
@@ -32,7 +31,6 @@
 		<copy todir="${dir.intermediate}" includeEmptyDirs="true">
 			<fileset dir="${dir.source}/" excludes="${file.default.exclude}, ${file.exclude}"/>
 		</copy>
-		<mkdir dir="${dir.intermediate2}"/>
 		<mkdir dir="${dir.output}"/>
 	</target>	
 	
@@ -86,7 +84,7 @@
 	<target name="css_insert_inline"
 		description="Insert the CSS includes that should be inlined">
 		<property name="file.name" value="inline.css"/>
-		<echo>Copying ${file.name} into HTML head for ${src_dir}</echo>
+		<echo>Copying ${file.name} into HTML head for files in ${edit_dir}</echo>
 		<!-- load the CSS file contents into a variable -->
 		<loadfile property="file.contents" srcFile="${css_dir}/${file.name}"/>
 		<replaceregexp
@@ -104,12 +102,12 @@
 		<property name="file.name" value="head.css"/>
 		<echo>Copying ${file.name} into HTML head</echo>
 		<!-- load the CSS file contents into a variable -->
-		<loadfile property="file.contents" srcFile="${dir.intermediate}/${dir.css}/${file.name}"/>
+		<loadfile property="file.contents" srcFile="${css_dir}/${file.name}"/>
 		<replaceregexp
 			match='&lt;/head&gt;'
 			replace="&lt;style\ type='text/css'&gt;${file.contents}&lt;/style&gt;&lt;/head&gt;"
 			flags="gs">
-			<fileset dir="${dir.intermediate2}">
+			<fileset dir="${edit_dir}">
 				<include name="*.html" />
 			</fileset>
 		</replaceregexp>
@@ -127,9 +125,12 @@
 		</antcall>
 		<antcall target="premailer">
 			<param name="src_dir" value="${dir.intermediate}"/>
-			<param name="dest_dir" value="${dir.intermediate2}"/>
+			<param name="dest_dir" value="${dir.output}"/>
 		</antcall>
-		<antcall target="css_insert_head" />
+		<antcall target="css_insert_head">
+			<param name="edit_dir" value="${dir.output}"/>
+			<param name="css_dir" value="${dir.source}/${dir.css}"/>
+		</antcall>
 	</target>
 	
 	<!-- Fires off the whole shebang -->
@@ -140,19 +141,14 @@
 
    		<!-- Insert cache-busting string to work around Gmail image cacheing -->
    		<antcall target="bustcache">
-			<param name="src" value="${dir.intermediate2}"/>
+			<param name="src" value="${dir.output}"/>
 			<param name="cachebust" value="${version.id}"/>
 		</antcall>
    		
-   		<!-- copy processed files from intermediate folders to final -->
-   		<copy todir="${dir.output}" includeEmptyDirs="false">
-			<fileset dir="${dir.intermediate2}/" excludes="**/.sass-cache/**, **/css/**"/>
-		</copy>
    		<!-- copy assets from source to final -->
 		<copy todir="${dir.output}/assets" includeEmptyDirs="true">
 			<fileset dir="${dir.source}/assets" excludes="${file.default.exclude}, ${file.exclude}"/>
 		</copy>
- 		<delete dir="${dir.intermediate2}" />
    		<delete dir="${dir.intermediate}" />
    	</target>
 
