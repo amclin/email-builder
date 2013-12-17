@@ -72,12 +72,12 @@
 
 	<target name="css_exclude_head"
 		description="Rip the CSS includes out that need to remain in the head to prevent them from being inlined.">
-		<echo>Removing the @include that points to the head-safe CSS file</echo>
+		<echo>Removing the @include that points to the head-specific CSS file</echo>
 		<replaceregexp
 			match='@import\ url\("css/head.css"\);'
 			replace=""
 			flags="gs">
-			<fileset dir="${dir.intermediate}">
+			<fileset dir="${edit_dir}">
 				<include name="*.html" />
 			</fileset>
 		</replaceregexp>
@@ -93,7 +93,7 @@
 			match="${match}"
 			replace="${file.contents}"
 			flags="gs">
-			<fileset dir="${src_dir}">
+			<fileset dir="${edit_dir}">
 				<include name="*.html" />
 			</fileset>
 		</replaceregexp>
@@ -117,9 +117,11 @@
 
 	<target name="css_include"
 		depends="compass_compile">
-		<antcall target="css_exclude_head" />
+		<antcall target="css_exclude_head">
+			<param name="edit_dir" value="${dir.intermediate}"/>
+		</antcall>
 		<antcall target="css_insert_inline">
-			<param name="src_dir" value="${dir.intermediate}"/>
+			<param name="edit_dir" value="${dir.intermediate}"/>
 			<param name="css_dir" value="${dir.intermediate}/${dir.css}"/>
 			<param name="match" value='@import\ url\("css/inline.css"\);'/>
 		</antcall>
